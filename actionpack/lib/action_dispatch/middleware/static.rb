@@ -14,11 +14,12 @@ module ActionDispatch
       path = unescape_path(path)
       return false unless path.valid_encoding?
 
-      full_path = path.empty? ? @root : File.join(@root, escape_glob_chars(path))
+      full_path = path.empty? ? @root : File.join(@root,
+        clean_path_info(escape_glob_chars(path)))
       paths = "#{full_path}#{ext}"
 
       matches = Dir[paths]
-      match = matches.detect { |m| File.file?(m) }
+      match = matches.detect { |m| File.file?(m) && File.readable?(m) }
       if match
         match.sub!(@compiled_root, '')
         ::Rack::Utils.escape(match)
@@ -41,7 +42,26 @@ module ActionDispatch
     end
 
     def escape_glob_chars(path)
-      path.gsub(/[*?{}\[\]]/, "\\\\\\&")
+      path.gsub(/[*?{}\[\]\\]/, "\\\\\\&")
+    end
+
+    private
+
+    PATH_SEPS = Regexp.union(*[::File::SEPARATOR, ::File::ALT_SEPARATOR].compact)
+
+    def clean_path_info(path_info)
+      parts = path_info.split PATH_SEPS
+
+      clean = []
+
+      parts.each do |part|
+        next if part.empty? || part == '.'
+        part == '..' ? clean.pop : clean << part
+      end
+
+      clean.unshift '/' if parts.empty? || parts.first.empty?
+
+      ::File.join(*clean)
     end
   end
 
