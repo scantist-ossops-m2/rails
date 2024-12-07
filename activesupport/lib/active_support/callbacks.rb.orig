@@ -768,7 +768,7 @@ module ActiveSupport
         options = names.extract_options!
 
         names.each do |name|
-          class_attribute "_#{name}_callbacks", instance_writer: false
+          class_attribute "_#{name}_callbacks"
           set_callbacks name, CallbackChain.new(name, options)
         end
       end
