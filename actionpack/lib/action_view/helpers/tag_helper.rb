@@ -143,7 +143,6 @@ module ActionView
               elsif BOOLEAN_ATTRIBUTES.include?(key)
                 attrs << %(#{key}="#{key}") if value
               elsif !value.nil?
-                final_value = value.is_a?(Array) ? value.join(" ") : value
                 attrs << tag_option(key, value, escape)
               end
             end
@@ -155,7 +154,7 @@ module ActionView
           if value.is_a?(Array)
             value = escape ? safe_join(value, " ") : value.join(" ")
           else
-            value = escape ? ERB::Util.html_escape(value) : value
+            value = escape ? ERB::Util.html_escape(value) : value.to_s
           end
           %(#{key}="#{value.gsub(/"/, '&quot;'.freeze)}")
         end
