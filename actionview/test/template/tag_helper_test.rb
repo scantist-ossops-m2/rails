@@ -29,6 +29,14 @@ class TagHelperTest < ActionView::TestCase
     assert_equal "<p included=\"\" />", tag("p", :included => '')
   end
 
+  def test_tag_options_accepts_symbol_option_when_not_escaping
+    assert_equal "<p value=\"symbol\" />", tag("p", { value: :symbol }, false, false)
+  end
+
+  def test_tag_options_accepts_integer_option_when_not_escaping
+    assert_equal "<p value=\"42\" />", tag("p", { value: 42 }, false, false)
+  end
+
   def test_tag_options_converts_boolean_option
     assert_dom_equal '<p disabled="disabled" itemscope="itemscope" multiple="multiple" readonly="readonly" allowfullscreen="allowfullscreen" seamless="seamless" typemustmatch="typemustmatch" sortable="sortable" default="default" inert="inert" truespeed="truespeed" />',
       tag("p", :disabled => true, :itemscope => true, :multiple => true, :readonly => true, :allowfullscreen => true, :seamless => true, :typemustmatch => true, :sortable => true, :default => true, :inert => true, :truespeed => true)
@@ -150,6 +158,16 @@ class TagHelperTest < ActionView::TestCase
     assert_equal '<p class="song> play&gt;" />', str
   end
 
+  def test_tag_does_not_honor_html_safe_double_quotes_as_attributes
+    assert_dom_equal '<p title="&quot;">content</p>',
+      content_tag('p', "content", title: '"'.html_safe)
+  end
+
+  def test_data_tag_does_not_honor_html_safe_double_quotes_as_attributes
+    assert_dom_equal '<p data-title="&quot;">content</p>',
+      content_tag('p', "content", data: { title: '"'.html_safe })
+  end
+
   def test_skip_invalid_escaped_attributes
     ['&1;', '&#1dfa3;', '& #123;'].each do |escaped|
       assert_equal %(<a href="#{escaped.gsub(/&/, '&amp;')}" />), tag('a', :href => escaped)
@@ -177,6 +195,6 @@ class TagHelperTest < ActionView::TestCase
   def test_link_to_data_nil_equal
     div_type1 = content_tag(:div, 'test', { 'data-tooltip' => nil })
     div_type2 = content_tag(:div, 'test', { data: {tooltip: nil} })
-    assert_dom_equal div_type1, div_type2 
+    assert_dom_equal div_type1, div_type2
   end
 end
